@@ -40,29 +40,29 @@ deployments:
   kubectl:
     kustomize: true
     manifests:
-    - ../pascal-deployments/microservices/delivery/overlay/dev
+    - ../microservices-deploy/delivery/overlay/dev
 - name: kitchen
   kubectl:
     kustomize: true
     manifests:
-    - ../pascal-deployments/microservices/kitchen/overlay/dev
+    - ../microservices-deploy/kitchen/overlay/dev
 - name: order
   kubectl:
     kustomize: true
     manifests:
-    - ../pascal-deployments/microservices/order/overlay/dev
+    - ../microservices-deploy/order/overlay/dev
 - name: payment
   kubectl:
     kustomize: true
     manifests:
-    - ../pascal-deployments/microservices/payment/overlay/dev
+    - ../microservices-deploy/payment/overlay/dev
 - name: rabbitmq
   helm:
     chart:
       repo: https://charts.bitnami.com/bitnami
       name: rabbitmq
     valuesFiles:
-      - ../pascal-deployments/microservices/rabbitmq/values.dev.yaml
+      - ../microservices-deploy/rabbitmq/values.dev.yaml
 
 # `dev` only applies when you run `devspace dev`
 dev:
@@ -70,6 +70,8 @@ dev:
   # Port-forwarding lets you access your application via localhost on your local machine
   ports:
   - imageSelector: ${ORDER_IMAGE} # Select the Pod that runs our `${IMAGE}`
+    labelSelector:
+      auto-devspace-popup: "true"
     forward:
     - port: 9000
 

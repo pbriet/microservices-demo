@@ -15,11 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
+from django.http import HttpResponse
 
 from api.views import new_order, dashboard
+
+def healthz(request):
+    return HttpResponse()
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('new-order', new_order),
+    path('healthz', healthz),
     path('', dashboard)
 ]
