@@ -1,0 +1,130 @@
+version: "3"
+
+services:
+
+  rabbitmq:
+    image: public.ecr.aws/bitnami/rabbitmq:3.8.11
+    environment:
+      RABBITMQ_USERNAME: rabbit
+      RABBITMQ_PASSWORD: carrot
+      RABBITMQ_VHOST: /
+
+  payment:
+    build: payment
+    volumes:
+      - ./payment/app:/src
+    depends_on:
+      - rabbitmq
+    environment:
+      RABBITMQ_CONNECTION_STRING: amqp://rabbit:carrot@rabbitmq/%2F
+
+  order:
+    build: order
+    volumes:
+      - ./order/app:/src
+    depends_on:
+      - rabbitmq
+      - order_pgsql
+    ports:
+      - "9000:9000"
+    environment:
+      RABBITMQ_CONNECTION_STRING: amqp://rabbit:carrot@rabbitmq/%2F
+      DB_HOST: order_pgsql
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: order_db
+    
+  order_mq:
+    build: order
+    volumes:
+      - ./order/app:/src
+    depends_on:
+      - rabbitmq
+      - order_pgsql
+    command: ["python", "-u", "manage.py", "consume_queues"]
+    environment:
+      RABBITMQ_CONNECTION_STRING: amqp://rabbit:carrot@rabbitmq/%2F
+      DB_HOST: order_pgsql
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: order_db
+
+  order_pgsql:
+    image: public.ecr.aws/bitnami/postgresql:9.6.20
+    environment:
+      POSTGRESQL_PASSWORD: password
+      POSTGRESQL_DATABASE: order_db
+    
+  kitchen:
+    build: kitchen
+    volumes:
+      - ./kitchen/app:/src
+    depends_on:
+      - rabbitmq
+      - kitchen_pgsql
+    ports:
+      - "9001:9000"
+    environment:
+      RABBITMQ_CONNECTION_STRING: amqp://rabbit:carrot@rabbitmq/%2F
+      DB_HOST: kitchen_pgsql
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: kitchen_db
+    
+  kitchen_pgsql:
+    image: public.ecr.aws/bitnami/postgresql:9.6.20
+    environment:
+      POSTGRESQL_PASSWORD: password
+      POSTGRESQL_DATABASE: kitchen_db
+    
+  kitchen_mq:
+    build: kitchen
+    volumes:
+      - ./kitchen/app:/src
+    depends_on:
+      - rabbitmq
+      - kitchen_pgsql
+    command: ["python", "-u", "manage.py", "consume_queues"]
+    environment:
+      RABBITMQ_CONNECTION_STRING: amqp://rabbit:carrot@rabbitmq/%2F
+      DB_HOST: kitchen_pgsql
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: kitchen_db
+
+  delivery:
+    build: delivery
+    volumes:
+      - ./delivery/app:/src
+    depends_on:
+      - rabbitmq
+      - delivery_pgsql
+    ports:
+      - "9002:9000"
+    environment:
+      RABBITMQ_CONNECTION_STRING: amqp://rabbit:carrot@rabbitmq/%2F
+      DB_HOST: delivery_pgsql
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: delivery_db
+    
+  delivery_pgsql:
+    image: public.ecr.aws/bitnami/postgresql:9.6.20
+    environment:
+      POSTGRESQL_PASSWORD: password
+      POSTGRESQL_DATABASE: delivery_db
+
+  delivery_mq:
+    build: delivery
+    volumes:
+      - ./delivery/app:/src
+    depends_on:
+      - rabbitmq
+      - delivery_pgsql
+    command: ["python", "-u", "manage.py", "consume_queues"]
+    environment:
+      RABBITMQ_CONNECTION_STRING: amqp://rabbit:carrot@rabbitmq/%2F
+      DB_HOST: delivery_pgsql
+      DB_USER: postgres
+      DB_PASSWORD: password
+      DB_NAME: delivery_db

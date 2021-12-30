@@ -1,0 +1,14 @@
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: rabbitmq-manager
+  namespace: microservices
+spec:
+  host: rabbitmq-manager-microservices.apps.pascal-okd.appalia.net
+  to:
+    kind: Service
+    name: rabbitmq
+    weight: 100
+  port:
+    targetPort: http-stats
+  wildcardPolicy: None

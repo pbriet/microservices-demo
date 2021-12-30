@@ -1,0 +1,18 @@
+<h2>Welcome to our restaurant</h2>
+
+<form method="POST">
+    {% csrf_token %}
+
+    Menu : 
+    <select name="menu">
+        <option value="STANDARD">Menu standard</option>
+        <option value="XXL">Menu XXL</option>
+    </select><br/>
+
+    Card number : <input type="text" name="payment_card_number" value="3333111122225555"/><br/>
+    Card CVC : <input type="text" name="payment_cvc" value="765"/><br/>
+
+    <button type="submit">
+        Order a meal
+    </button>
+</form>

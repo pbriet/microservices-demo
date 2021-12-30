@@ -1,0 +1,117 @@
+version: v1beta11
+
+# `vars` specifies variables which may be used as ${VAR_NAME} in devspace.yaml
+vars:
+- name: REGISTRY_PASSWORD
+  password: true
+- name: DELIVERY_IMAGE
+  value: k3d-microservices-registry:38597/microservices/delivery
+- name: KITCHEN_IMAGE
+  value: k3d-microservices-registry:38597/microservices/kitchen
+- name: ORDER_IMAGE
+  value: k3d-microservices-registry:38597/microservices/order
+- name: PAYMENT_IMAGE
+  value: k3d-microservices-registry:38597/microservices/payment
+pullSecrets:
+- registry: k3d-microservices-registry:38597
+  username: ${REGISTRY_USERNAME}
+  password: ${REGISTRY_PASSWORD}
+
+images:
+  delivery:
+    image: ${DELIVERY_IMAGE}
+    dockerfile: ./delivery/Dockerfile
+    context: ./delivery
+  kitchen:
+    image: ${KITCHEN_IMAGE}
+    dockerfile: ./kitchen/Dockerfile
+    context: ./kitchen
+  order:
+    image: ${ORDER_IMAGE}
+    dockerfile: ./order/Dockerfile
+    context: ./order
+  payment:
+    image: ${PAYMENT_IMAGE}
+    dockerfile: ./payment/Dockerfile
+    context: ./payment
+
+deployments:
+- name: delivery
+  kubectl:
+    kustomize: true
+    manifests:
+    - ../pascal-deployments/microservices/delivery/overlay/dev
+- name: kitchen
+  kubectl:
+    kustomize: true
+    manifests:
+    - ../pascal-deployments/microservices/kitchen/overlay/dev
+- name: order
+  kubectl:
+    kustomize: true
+    manifests:
+    - ../pascal-deployments/microservices/order/overlay/dev
+- name: payment
+  kubectl:
+    kustomize: true
+    manifests:
+    - ../pascal-deployments/microservices/payment/overlay/dev
+- name: rabbitmq
+  helm:
+    chart:
+      repo: https://charts.bitnami.com/bitnami
+      name: rabbitmq
+    valuesFiles:
+      - ../pascal-deployments/microservices/rabbitmq/values.dev.yaml
+
+# `dev` only applies when you run `devspace dev`
+dev:
+  # `dev.ports` specifies all ports that should be forwarded while `devspace dev` is running
+  # Port-forwarding lets you access your application via localhost on your local machine
+  ports:
+  - imageSelector: ${ORDER_IMAGE} # Select the Pod that runs our `${IMAGE}`
+    forward:
+    - port: 9000
+
+  # `dev.open` tells DevSpace to open certain URLs as soon as they return HTTP status 200
+  # Since we configured port-forwarding, we can use a localhost address here to access our application
+  open:
+  - url: http://localhost:9000
+
+  # `dev.sync` configures a file sync between our Pods in k8s and your local project files
+  sync:
+  - imageSelector: ${DELIVERY_IMAGE} # Select the Pod that runs our `${IMAGE}`
+    localSubPath: ./delivery/app
+    containerPath: /src
+    excludePaths:
+    - .git/
+
+  - imageSelector: ${KITCHEN_IMAGE}
+    localSubPath: ./kitchen/app
+    containerPath: /src
+    excludePaths:
+    - .git/
+
+  - imageSelector: ${ORDER_IMAGE}
+    localSubPath: ./order/app
+    containerPath: /src
+    containerName: webserver
+    excludePaths:
+    - .git/
+
+  - imageSelector: ${ORDER_IMAGE}
+    localSubPath: ./order/app
+    containerPath: /src
+    containerName: queue-consumer
+    excludePaths:
+    - .git/
+
+  - imageSelector: ${PAYMENT_IMAGE}
+    localSubPath: ./payment/app
+    containerPath: /src
+    excludePaths:
+    - .git/
+
+  autoReload:
+    paths:
+      - ./delivery/Dockerfile

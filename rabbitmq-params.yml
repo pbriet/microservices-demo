@@ -1,0 +1,17 @@
+replicaCount: 2
+auth:
+  username: rabbit
+  password: carrot
+  erlangCookie: SfrgpGeZv5zAbLTrCPKenjpNQWb6IBtl
+persistence:
+  enabled: true
+  storageClass: nfs
+  size: 2Gi
+image:
+  registry: public.ecr.aws
+  repository: bitnami/rabbitmq
+  tag: latest
+podSecurityContext:
+  enabled: false
+nodeSelector:
+  node-role.kubernetes.io/infra: ""

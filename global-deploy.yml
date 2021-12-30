@@ -1,0 +1,7 @@
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rabbitmq-connection-credentials
+data:
+  RABBITMQ_CONNECTION_STRING: amqp://rabbit:carrot@rabbitmq/%2F
