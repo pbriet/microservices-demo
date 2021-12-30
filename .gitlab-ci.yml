@@ -1,0 +1,82 @@
+
+stages:
+  - build
+  - deploy
+
+build:
+  stage: build
+  image: docker:20 #quay.io/containers/podman:v2.2.1
+  script:
+    - echo -n $OPENSHIFT_TOKEN | docker login https://$OPENSHIFT_REGISTRY -u gitlab --password-stdin
+    - echo "Building order"
+    - docker build order -t "$OPENSHIFT_REGISTRY/microservices/order:$CI_COMMIT_SHA"
+    - docker push "$OPENSHIFT_REGISTRY/microservices/order:$CI_COMMIT_SHA"
+    - echo "Building payment"
+    - docker build payment -t "$OPENSHIFT_REGISTRY/microservices/payment:$CI_COMMIT_SHA"
+    - docker push "$OPENSHIFT_REGISTRY/microservices/payment:$CI_COMMIT_SHA"
+    - echo "Building kitchen"
+    - docker build kitchen -t "$OPENSHIFT_REGISTRY/microservices/kitchen:$CI_COMMIT_SHA"
+    - docker push "$OPENSHIFT_REGISTRY/microservices/kitchen:$CI_COMMIT_SHA"
+    - echo "Building delivery"
+    - docker build delivery -t "$OPENSHIFT_REGISTRY/microservices/delivery:$CI_COMMIT_SHA"
+    - docker push "$OPENSHIFT_REGISTRY/microservices/delivery:$CI_COMMIT_SHA"
+  # rules:  # Cannot condition, because image is based on commit tag !
+  #   - changes:
+  #     - delivery/**
+  #     - kitchen/**
+  #     - order/**
+  #     - payment/**
+
+deploy:
+  stage: deploy
+  image: registry.gitlab.com/apalia/devops-roadmap/infra/builder:latest
+  script:
+    # Save current directory
+    - ROOT_DIR=`pwd`
+
+    # Login to Openshift
+    - oc login $OPENSHIFT_HOST --token=$OPENSHIFT_TOKEN --insecure-skip-tls-verify
+    - oc project microservices
+
+    # Install dependencies & shared components
+    - chmod 755 install-dependencies.sh && ./install-dependencies.sh
+    - chmod 755 deploy-global.sh && ./deploy-global.sh
+
+
+    # Set private SSH key
+    - git config --global url."git@gitlab.com:".insteadOf "https://gitlab.com/"
+    # Add gitlab to known_hosts
+    - mkdir -p ~/.ssh && chmod 700 ~/.ssh
+    - ssh-keyscan -H gitlab.com >> ~/.ssh/known_hosts
+    # Start the ssh agent and add the deploykey
+    - echo "$GITOPS_REPO_SSH_PRIVATE_KEY" > deploykey
+    - chmod 400 deploykey
+    - eval $(ssh-agent -s)
+    - ssh-add deploykey
+    
+    # Clone deployment code
+    - git clone git@gitlab.com:apalia/devops-roadmap/pascal-deployments.git
+
+    # Modify images & suffix
+    - INTERNAL_REGISTRY_ADDRESS="image-registry.openshift-image-registry.svc:5000"
+    - cd $ROOT_DIR/pascal-deployments/microservices/order/overlay/staging
+    - kustomize edit set image "$INTERNAL_REGISTRY_ADDRESS/microservices/order:$CI_COMMIT_SHA"
+    - kustomize edit set namesuffix -- -$CI_COMMIT_SHA
+
+    - cd $ROOT_DIR/pascal-deployments/microservices/payment/overlay/staging
+    - kustomize edit set image "$INTERNAL_REGISTRY_ADDRESS/microservices/payment:$CI_COMMIT_SHA"
+    - kustomize edit set namesuffix -- -$CI_COMMIT_SHA
+    
+    - cd $ROOT_DIR/pascal-deployments/microservices/kitchen/overlay/staging
+    - kustomize edit set image "$INTERNAL_REGISTRY_ADDRESS/microservices/kitchen:$CI_COMMIT_SHA"
+    - kustomize edit set namesuffix -- -$CI_COMMIT_SHA
+
+    - cd $ROOT_DIR/pascal-deployments/microservices/delivery/overlay/staging
+    - kustomize edit set image "$INTERNAL_REGISTRY_ADDRESS/microservices/delivery:$CI_COMMIT_SHA"
+    - kustomize edit set namesuffix -- -$CI_COMMIT_SHA
+
+    ### Commit modifications
+    - git config --global user.email "ci-pipeline@apalia.net"
+    - git config --global user.name "CI Pipeline"
+    - git commit -am "[ci] Release $CI_COMMIT_SHA"
+    - git push origin HEAD:master
