@@ -43,12 +43,11 @@ def handle_payment_validation(ch, method, props, body):
     Received a new order
     """
     try:
-        print("Validating payment: %s" % body)
-        print("With correlation id: %s" % props.correlation_id)
+        print("PAYMENT : Validating payment: %s" % body)
 
         time.sleep(5)
 
-        print("Payment succeeded")
+        print("PAYMENT : Payment succeeded")
 
         response = {"status": "ok"}
 

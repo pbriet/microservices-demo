@@ -8,13 +8,15 @@ from delivery.rabbitmq import MessagingConnection
 from delivery_item.models import DeliveryItem
 
 import datetime
+import time
 import json
 
 def handle_incoming_delivery(ch, method, props, body):
     """
     New menu to deliver
     """
-    print("handle_incoming_delivery")
+    print("DELIVERY : handle_incoming_delivery")
+    time.sleep(5)
     try:
         order_identifier = props.correlation_id
         deliveries = list(DeliveryItem.objects.filter(identifier=str(order_identifier)))
@@ -41,6 +43,8 @@ def handle_incoming_delivery(ch, method, props, body):
             'status': 'ok',
             'estimated_delivery': order.arrival_time.isoformat()
         }
+
+        print("DELIVERY : will be delivered at %s" % order.arrival_time.isoformat())
 
         ch.basic_publish(
             exchange='order_saga',

@@ -25,7 +25,7 @@ class PaymentStep(SagaStep):
         Update the Saga object from data returned by success call to
         the microservice
         """
-        print("step payment successsss !")
+        print("* Saga transaction - payment success !")
         saga_obj.status = 'PAYMENT_OK'
         saga_obj.save()
 

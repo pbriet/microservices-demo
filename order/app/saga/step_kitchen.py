@@ -3,7 +3,7 @@ from sagapy.step import SagaStep
 class KitchenStep(SagaStep):
 
     SEND_QUEUE = "incoming_menu"
-    REPLY_QUEUE ="processed_menu"
+    REPLY_QUEUE = "processed_menu"
 
     ALLOWED_STATES = ('PAYMENT_OK',)
 
@@ -20,6 +20,7 @@ class KitchenStep(SagaStep):
         Update the Saga object from data returned by success call to
         the microservice
         """
+        print("* Saga transaction - Kichen scheduling success !")
         saga_obj.status = 'KITCHEN_SCHEDULED'
         saga_obj.save()
 

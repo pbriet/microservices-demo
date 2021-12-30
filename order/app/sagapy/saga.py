@@ -34,13 +34,14 @@ class SagaManager(object):
                 channel.queue_declare(queue=step.SEND_QUEUE)
                 channel.queue_bind(step.SEND_QUEUE, cls.EXCHANGE_NAME, routing_key=step.SEND_QUEUE)
                 if step.REPLY_QUEUE:
+                    print("BIND reply queue", step.REPLY_QUEUE)
                     channel.queue_declare(queue=step.REPLY_QUEUE)
                     channel.queue_bind(step.REPLY_QUEUE, cls.EXCHANGE_NAME, routing_key=step.REPLY_QUEUE)
 
     @classmethod
     def get_next_step(cls, step):
         step_i = cls.STEPS.index(step)
-        if step_i == len(cls.STEPS):
+        if step_i == len(cls.STEPS) - 1:
             # Last step
             return None
         return cls.STEPS[step_i + 1]
@@ -99,45 +100,47 @@ class SagaManager(object):
         Starts a listener process, watching for replies in
         queues.
         """
-        for step in cls.STEPS:
+        with MessagingTransaction() as transaction:
+            for step in cls.STEPS:
 
-            def on_reply(ch, method, props, body, st=step):
-                try:
-                    # Retrieve the Saga object from the identifier
-                    obj = cls.SAGA_MODEL.objects.get(identifier=props.correlation_id)
+                def on_reply(ch, method, props, body, st=step):
+                    try:
+                        # Retrieve the Saga object from the identifier
+                        obj = cls.SAGA_MODEL.objects.get(identifier=props.correlation_id)
 
-                    # Custom Protocol : should be JSON structured this way
-                    # { 'status': 'ok', 'data': { ... } }
-                    # { 'status': 'fail': 'data': { ... }}
-                    # { 'status': 'compensate': 'data': { ... }}
-                    data = json.loads(body)
+                        # Custom Protocol : should be JSON structured this way
+                        # { 'status': 'ok', 'data': { ... } }
+                        # { 'status': 'fail': 'data': { ... }}
+                        # { 'status': 'compensate': 'data': { ... }}
+                        data = json.loads(body)
 
-                    if data['status'] == 'ok':
-                        # Success call. Save state.
-                        st.update_object_on_success(obj, data)
-                        # Send next message in SAGA
-                        cls.send_message(cls.get_next_step(st), obj, data)
-                    elif data['status'] == 'fail':
-                        # Failed operation. Save state
-                        st.update_object_on_failure(obj, data)
-                    elif data['status'] == 'compensate':
-                        # Compensated operation. Save state
-                        st.update_object_on_compensate(obj, data)
-                    else:
-                        raise Exception("unknown status : %s" % body['status'])
+                        if data['status'] == 'ok':
+                            # Success call. Save state.
+                            st.update_object_on_success(obj, data)
+                            # Send next message in SAGA
+                            next_step = cls.get_next_step(st)
+                            if next_step is not None:
+                                cls.send_message(next_step, obj, data)
+                        elif data['status'] == 'fail':
+                            # Failed operation. Save state
+                            st.update_object_on_failure(obj, data)
+                        elif data['status'] == 'compensate':
+                            # Compensated operation. Save state
+                            st.update_object_on_compensate(obj, data)
+                        else:
+                            raise Exception("unknown status : %s" % body['status'])
 
-                    if data['status'] in ('fail', 'compensate'):
-                        # Compensation/failure
-                        # Call compensation on previous step
-                        cls.send_compensate(cls.get_previous_step(st), obj)
-                finally:
-                    ch.basic_ack(delivery_tag = method.delivery_tag)
+                        if data['status'] in ('fail', 'compensate'):
+                            # Compensation/failure
+                            # Call compensation on previous step
+                            cls.send_compensate(cls.get_previous_step(st), obj)
+                    finally:
+                        ch.basic_ack(delivery_tag = method.delivery_tag)
 
-            with MessagingTransaction() as transaction:
                 transaction.channel.basic_consume(
                     queue=step.REPLY_QUEUE,
                     on_message_callback=on_reply)
 
-                print(' [*] Waiting for messages')
-                transaction.channel.start_consuming()
+            print(' [*] Waiting for messages')
+            transaction.channel.start_consuming()
 

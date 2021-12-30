@@ -9,6 +9,7 @@ from menu_orders.models import MenuOrder
 
 import datetime
 import json
+import time
 
 def handle_incoming_menu(ch, method, props, body):
     """
@@ -16,7 +17,8 @@ def handle_incoming_menu(ch, method, props, body):
     """
     try:
         order_identifier = props.correlation_id
-        print("handle_incoming_menu ", order_identifier)
+        print("KITCHEN : handle_incoming_menu ", order_identifier)
+        time.sleep(5)
         menu_orders = list(MenuOrder.objects.filter(identifier=str(order_identifier)))
 
         if len(menu_orders) > 0:
@@ -42,16 +44,17 @@ def handle_incoming_menu(ch, method, props, body):
             'estimated_cooked_time': order.preparation_end.isoformat()
         }
 
+        print("KITCHEN : menu will be cooked at ", order.preparation_end.isoformat())
+
+        # Replying to the channel that was asked
         ch.basic_publish(
             exchange='order_saga',
             routing_key=props.reply_to,
             properties=pika.BasicProperties(
-                correlation_id=str(order.identifier)
+                correlation_id=props.correlation_id
             ),
             body=json.dumps(message)
         )
-
-        print("Queue processed_menu")
     finally:
 
         ch.basic_ack(delivery_tag = method.delivery_tag)

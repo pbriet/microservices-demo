@@ -5,7 +5,7 @@ class DeliveryStep(SagaStep):
     SEND_QUEUE = "incoming_delivery"
     REPLY_QUEUE ="processed_delivery"
 
-    ALLOWED_STATES = ('PAYMENT_OK',)
+    ALLOWED_STATES = ('KITCHEN_SCHEDULED',)
 
     def get_message(self, saga_obj, previous_step_data=None):
         """
@@ -20,8 +20,8 @@ class DeliveryStep(SagaStep):
         Update the Saga object from data returned by success call to
         the microservice
         """
-        print("Delivery schedul success !", data)
-        saga_obj.status = 'KITCHEN_SCHEDULED'
+        print("* Saga transaction - Delivery scheduling success !", data)
+        saga_obj.status = 'DELIVERY_SCHEDULED'
         saga_obj.save()
 
     def update_object_on_compensate(self, saga_obj, data):
@@ -29,7 +29,7 @@ class DeliveryStep(SagaStep):
         Update the Saga object from data returned when the microservices
         compensated
         """
-        saga_obj.status = 'KITCHEN_CANCELLED'
+        saga_obj.status = 'DELIVERY_CANCELLED'
         saga_obj.save()
 
     def update_object_on_failure(self, saga_obj, data):
@@ -37,5 +37,5 @@ class DeliveryStep(SagaStep):
         Update the Saga object from data returned by failed call to
         the microservice
         """
-        saga_obj.status = 'KITCHEN_FAILED'
+        saga_obj.status = 'DELIVERY_FAILED'
         saga_obj.save()
