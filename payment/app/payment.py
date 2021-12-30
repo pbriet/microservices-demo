@@ -30,6 +30,7 @@ while True:
 
 
 channel = connection.channel()
+channel.exchange_declare("order_saga", "direct", durable=True)
 channel.queue_declare('incoming_payment')
 channel.queue_bind('incoming_payment', 'order_saga', routing_key='incoming_payment')
 
