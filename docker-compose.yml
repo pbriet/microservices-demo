@@ -26,14 +26,14 @@ services:
       - rabbitmq
       - order_pgsql
     ports:
-      - "9000:9000"
+      - "7770:9000"
     environment:
       RABBITMQ_CONNECTION_STRING: amqp://rabbit:carrot@rabbitmq/%2F
       DB_HOST: order_pgsql
       DB_USER: postgres
       DB_PASSWORD: password
       DB_NAME: order_db
-    
+
   order_mq:
     build: order
     volumes:
@@ -54,7 +54,7 @@ services:
     environment:
       POSTGRESQL_PASSWORD: password
       POSTGRESQL_DATABASE: order_db
-    
+
   kitchen:
     build: kitchen
     volumes:
@@ -63,20 +63,20 @@ services:
       - rabbitmq
       - kitchen_pgsql
     ports:
-      - "9001:9000"
+      - "7771:9000"
     environment:
       RABBITMQ_CONNECTION_STRING: amqp://rabbit:carrot@rabbitmq/%2F
       DB_HOST: kitchen_pgsql
       DB_USER: postgres
       DB_PASSWORD: password
       DB_NAME: kitchen_db
-    
+
   kitchen_pgsql:
     image: public.ecr.aws/bitnami/postgresql:9.6.20
     environment:
       POSTGRESQL_PASSWORD: password
       POSTGRESQL_DATABASE: kitchen_db
-    
+
   kitchen_mq:
     build: kitchen
     volumes:
@@ -100,14 +100,14 @@ services:
       - rabbitmq
       - delivery_pgsql
     ports:
-      - "9002:9000"
+      - "7772:9000"
     environment:
       RABBITMQ_CONNECTION_STRING: amqp://rabbit:carrot@rabbitmq/%2F
       DB_HOST: delivery_pgsql
       DB_USER: postgres
       DB_PASSWORD: password
       DB_NAME: delivery_db
-    
+
   delivery_pgsql:
     image: public.ecr.aws/bitnami/postgresql:9.6.20
     environment:

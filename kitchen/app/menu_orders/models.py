@@ -3,15 +3,26 @@ from django.db import models
 
 class MenuOrder(models.Model):
 
+    created_at = models.DateTimeField(auto_now_add=True,
+        verbose_name="Créé le")
+
     identifier = models.UUIDField(blank=False,
         verbose_name="Unique identifier for traceability")
-    
+
     menu = models.CharField(blank=True, max_length=40,
         verbose_name="Selected menu",
         choices=[
             ('STANDARD', 'Standard menu'),
             ('XXL', 'XXL Menu')
         ]
+    )
+
+    preparation_estimated_start = models.DateTimeField(null=True,
+        verbose_name="Preparation: estimated start"
+    )
+
+    preparation_estimated_end = models.DateTimeField(null=True,
+        verbose_name="Preparation: estimated start"
     )
 
     preparation_start = models.DateTimeField(null=True,

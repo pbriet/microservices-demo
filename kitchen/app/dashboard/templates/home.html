@@ -1,0 +1,50 @@
+<h1>Kitchen - Tableau de bord</h1>
+
+<h3>Commandes</h3>
+
+<table>
+  <tr>
+    <th>Date</th>
+    <th>Identifiant</th>
+    <th>Menu</th>
+    <th>Statut</th>
+    <th>Date préparation</th>
+    <th>Date fin préparation</th>
+  </tr>
+  {% for order in orders %}
+    <tr>
+      <td>{{ order.created_at | date:'r' }}</td>
+      <td>{{ order.identifier }}</td>
+      <td>{{ order.get_menu_display }}</td>
+      <td>{{ order.get_status_display }}</td>
+      <td>
+        {% if order.preparation_start %}
+          {{ order.preparation_start | date:'r' }}
+        {% else %}
+          Estimée à : {{ order.preparation_estimated_start | date:'r' }}
+        {% endif %}
+      </td>
+      <td>
+        {% if order.preparation_end %}
+          {{ order.preparation_end | date:'r' }}
+        {% else %}
+          Estimée à : {{ order.preparation_estimated_end | date:'r' }}
+        {% endif %}
+      </td>
+    </tr>
+  {% endfor %}
+</table>
+
+<style>
+  body {
+    padding: 30px
+  }
+  table td,th {
+    border: solid 1px;
+    padding: 5px 15px;
+  }
+  table {
+    max-width: 1100px;
+    border-collapse: collapse;
+  }
+</style>

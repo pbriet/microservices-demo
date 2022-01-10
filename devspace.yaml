@@ -69,50 +69,66 @@ dev:
   # `dev.ports` specifies all ports that should be forwarded while `devspace dev` is running
   # Port-forwarding lets you access your application via localhost on your local machine
   ports:
-  - imageSelector: ${ORDER_IMAGE} # Select the Pod that runs our `${IMAGE}`
-    labelSelector:
-      auto-devspace-popup: "true"
+  - labelSelector:
+      order-devspace-popup: "true"
     forward:
-    - port: 9000
+    - port: 9001
+      remotePort: 9000
+  - labelSelector:
+      kitchen-devspace-popup: "true"
+    forward:
+    - port: 9002
+      remotePort: 9000
 
   # `dev.open` tells DevSpace to open certain URLs as soon as they return HTTP status 200
   # Since we configured port-forwarding, we can use a localhost address here to access our application
   open:
-  - url: http://localhost:9000
+  - url: http://localhost:9001
+  - url: http://localhost:9002
 
   # `dev.sync` configures a file sync between our Pods in k8s and your local project files
   sync:
-  - imageSelector: ${DELIVERY_IMAGE} # Select the Pod that runs our `${IMAGE}`
+  - labelSelector:
+      app: delivery
     localSubPath: ./delivery/app
     containerPath: /src
     excludePaths:
     - .git/
+    - '**/*.pyc'
 
-  - imageSelector: ${KITCHEN_IMAGE}
+  - labelSelector:
+      app: kitchen
     localSubPath: ./kitchen/app
     containerPath: /src
     excludePaths:
     - .git/
+    - '**/*.pyc'
 
-  - imageSelector: ${ORDER_IMAGE}
+  - labelSelector:
+      app: order
     localSubPath: ./order/app
     containerPath: /src
     containerName: webserver
     excludePaths:
     - .git/
+    - '**/*.pyc'
 
-  - imageSelector: ${ORDER_IMAGE}
+  - labelSelector:
+      app: order
     localSubPath: ./order/app
     containerPath: /src
     containerName: queue-consumer
     excludePaths:
     - .git/
+    - '**/*.pyc'
 
-  - imageSelector: ${PAYMENT_IMAGE}
+  - labelSelector:
+      app: payment
     localSubPath: ./payment/app
     containerPath: /src
     excludePaths:
     - .git/
+    - '**/*.pyc'
 
   autoReload:
     paths:

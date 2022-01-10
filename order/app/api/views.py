@@ -1,6 +1,6 @@
 from api.models import Order
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 import requests
 # from saga.new_order import OrderSaga
@@ -8,7 +8,7 @@ from saga.models import OrderSagaTracker
 from saga.new_order import OrderSagaManager
 
 @csrf_exempt
-def new_order(request):
+def new_order_api(request):
     """
     API Call : new order from a customer
 
@@ -28,7 +28,7 @@ def new_order(request):
     return JsonResponse(order.serialize())
 
 
-def dashboard(request):
+def new_order(request):
 
     if request.method == 'POST':
         requests.post('http://localhost:9000/new-order',
@@ -38,5 +38,6 @@ def dashboard(request):
                 'menu': request.POST['menu']
             }
         )
+        return redirect('dashboard-home')
 
-    return render(request, "dashboard.html")
+    return render(request, "form.html")

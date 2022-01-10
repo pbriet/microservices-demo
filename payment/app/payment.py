@@ -5,6 +5,11 @@ import json
 import pika
 import time
 
+import logging
+
+# Reduce pika log level
+logging.getLogger("pika").setLevel(logging.WARNING)
+
 RABBITMQ_CONNECTION_STRING = os.environ.get('RABBITMQ_CONNECTION_STRING')
 
 print("Connecting to... ", RABBITMQ_CONNECTION_STRING)

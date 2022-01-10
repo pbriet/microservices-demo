@@ -23,6 +23,8 @@ class DeliveryStep(SagaStep):
         print("* Saga transaction - Delivery scheduling success !", data)
         saga_obj.status = 'DELIVERY_SCHEDULED'
         saga_obj.save()
+        saga_obj.order.status = 'VALIDATED'
+        saga_obj.order.save()
 
     def update_object_on_compensate(self, saga_obj, data):
         """

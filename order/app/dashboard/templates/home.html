@@ -1,0 +1,55 @@
+<h1>Order - Tableau de bord</h1>
+
+<h3>Commandes</h3>
+
+<table>
+  <tr>
+    <th>Date</th>
+    <th>Identifiant</th>
+    <th>Menu</th>
+    <th>Statut</th>
+  </tr>
+  {% for order in orders %}
+    <tr>
+      <td>{{ order.created_at | date:'r' }}</td>
+      <td>{{ order.identifier }}</td>
+      <td>{{ order.menu }}</td>
+      <td>{{ order.get_status_display }}</td>
+    </tr>
+  {% endfor %}
+</table>
+
+
+
+<h3>Transactions SAGA</h3>
+
+<table>
+  <tr>
+    <th>Date</th>
+    <th>Identifiant</th>
+    <th>Statut</th>
+  </tr>
+  {% for tracker in trackers %}
+    <tr>
+      <td>{{ tracker.created_at | date:'r' }}</td>
+      <td>{{ tracker.identifier }}</td>
+      <td>{{ tracker.get_status_display }}</td>
+    </tr>
+  {% endfor %}
+</table>
+
+
+
+<style>
+  body {
+    padding: 30px
+  }
+  table td,th {
+    border: solid 1px;
+    padding: 5px 15px;
+  }
+  table {
+    max-width: 1100px;
+    border-collapse: collapse;
+  }
+</style>

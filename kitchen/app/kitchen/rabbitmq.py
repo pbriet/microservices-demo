@@ -3,6 +3,10 @@
 import pika
 from django.conf import settings
 
+import logging
+
+# Reduce pika log level
+logging.getLogger("pika").setLevel(logging.WARNING)
 
 class MessagingTransaction(object):
     """

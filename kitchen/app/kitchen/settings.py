@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'dashboard',
     'menu_orders',
     'queue_listener'
 ]
@@ -127,3 +128,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 RABBITMQ_CONNECTION_STRING = os.environ.get('RABBITMQ_CONNECTION_STRING')
+CELERY_BROKER_URL = os.environ.get('RABBITMQ_CONNECTION_STRING')
+CELERY_IGNORE_RESULT = True

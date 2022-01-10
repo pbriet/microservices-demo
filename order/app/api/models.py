@@ -3,6 +3,9 @@ import uuid
 
 class Order(models.Model):
 
+    created_at = models.DateTimeField(auto_now_add=True,
+        verbose_name="Créé le")
+
     identifier = models.UUIDField(default=uuid.uuid4,
         verbose_name="Unique identifier for traceability")
 
@@ -10,17 +13,7 @@ class Order(models.Model):
         verbose_name="Status",
         choices=[
             ('PENDING', 'Waiting for validation and processing'),
-            ('PAYMENT_OK', 'Payment accepted'),
-            ('PAYMENT_CANCELLED', 'Payment cancelled'),
-            ('PAYMENT_FAILED', 'Payment failed'),
-            ('KITCHEN_SCHEDULED', 'Scheduled to be cooked'),
-            ('KITCHEN_CANCELLED', 'Cancelling cooking'),
-            ('KITCHEN_FAILED', 'Kitchen failure'),
-            ('DELIVERY_SCHEDULED', 'Scheduled to be deliveed'),
-            ('DELIVERY_CANCELLED', 'Cancelling delivery'),
-            ('DELIVERY_FAILED', 'Delivery failure'),
-
-
+            ('VALIDATED', 'Validated'),
             ('BEING_COOKED', 'Kitchen working on it'),
             ('COOKED', 'Ready to be delivered'),
             ('DELIVERY', 'Delivery in progress'),

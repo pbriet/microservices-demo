@@ -11,6 +11,11 @@ import datetime
 import time
 import json
 
+import logging
+
+# Reduce pika log level
+logging.getLogger("pika").setLevel(logging.WARNING)
+
 def handle_incoming_delivery(ch, method, props, body):
     """
     New menu to deliver

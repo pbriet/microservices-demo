@@ -6,6 +6,8 @@ class OrderSagaTracker(models.Model):
     """
     Saga transaction for a given order
     """
+    created_at = models.DateTimeField(auto_now_add=True,
+        verbose_name="Créé le")
     # Link to the order being treated by the SAGA
     order = models.ForeignKey(Order, models.CASCADE)
 
@@ -17,10 +19,14 @@ class OrderSagaTracker(models.Model):
         choices=[
             ('PENDING', 'Waiting for validation and processing'),
             ('PAYMENT_OK', 'Payment accepted'),
-            ('MENU_SCHEDULED', 'Scheduled to be cooked'),
-            ('COOKED', 'Ready to be delivered'),
-            ('DELIVERY', 'Delivery in progress'),
-            ('DELIVERED', 'Delivered')
+            ('PAYMENT_CANCELLED', 'Payment cancelled'),
+            ('PAYMENT_FAILED', 'Payment failed'),
+            ('KITCHEN_SCHEDULED', 'Scheduled to be cooked'),
+            ('KITCHEN_CANCELLED', 'Cancelling cooking'),
+            ('KITCHEN_FAILED', 'Kitchen failure'),
+            ('DELIVERY_SCHEDULED', 'Scheduled to be deliveed'),
+            ('DELIVERY_CANCELLED', 'Cancelling delivery'),
+            ('DELIVERY_FAILED', 'Delivery failure')
         ]
     )
     # TODO

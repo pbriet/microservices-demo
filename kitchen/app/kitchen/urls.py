@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.http import HttpResponse
+from dashboard.views import home
 
 def healthz(request):
     return HttpResponse()
@@ -23,4 +24,5 @@ def healthz(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('healthz', healthz),
+    path('', home),
 ]

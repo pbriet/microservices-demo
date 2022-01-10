@@ -17,14 +17,16 @@ from django.contrib import admin
 from django.urls import path
 from django.http import HttpResponse
 
-from api.views import new_order, dashboard
+from api.views import new_order, new_order_api
+from dashboard.views import home
 
 def healthz(request):
     return HttpResponse()
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('new-order', new_order),
+    path('new-order', new_order_api),
     path('healthz', healthz),
-    path('', dashboard)
+    path('', new_order),
+    path('dashboard/', home, name='dashboard-home')
 ]
