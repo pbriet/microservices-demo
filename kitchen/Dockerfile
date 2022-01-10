@@ -7,12 +7,17 @@ RUN pip install -r /tmp/requirements.txt
 
 ENV PYTHONUNBUFFERED=0
 
+RUN adduser user
+
 RUN mkdir /src /entrypoint
 COPY app/ /src/
 COPY entrypoint/ /entrypoint/
 
+RUN chown -R user:user /src /entrypoint
+
 EXPOSE 9000
 WORKDIR /src
+USER user
 
 ENTRYPOINT ["/entrypoint/start.sh"]
 
